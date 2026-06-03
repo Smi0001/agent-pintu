@@ -1,0 +1,10 @@
+{
+  "project": ".",
+  "serverRoot": "server",
+  "tsConfig": "server/tsconfig.json",
+  "appEntry": "server/app.ts",
+  "baseBranch": "main",
+  "outDir": "documents/pr-traces",
+  "routesPattern": "/routes/",
+  "depth": 4
+}

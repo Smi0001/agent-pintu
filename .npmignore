@@ -1,0 +1,6 @@
+.nvmrc
+.env*
+.pintu.json
+*.log
+node_modules/
+.gitignore

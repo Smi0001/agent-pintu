@@ -1,7 +1,7 @@
 {
   "name": "@smi0001/agent-pintu",
-  "version": "0.1.0",
-  "description": "PR call-graph tracer — extracts a route-rooted call graph from a PR diff and emits Mermaid + YAML artifacts via ts-morph static analysis.",
+  "version": "0.2.0",
+  "description": "PR call-graph tracer for TypeScript and JavaScript projects — extracts a route-rooted call graph from a PR diff and emits Mermaid + YAML artifacts via ts-morph static analysis.",
   "author": "Shammi Hans",
   "license": "MIT",
   "main": "lib/trace.js",
@@ -27,7 +27,10 @@
     "mermaid",
     "static-analysis",
     "developer-tools",
-    "cli"
+    "cli",
+    "typescript",
+    "javascript",
+    "express"
   ],
   "dependencies": {
     "ts-morph": "^22.0.0"

@@ -1,6 +1,6 @@
 # @smi0001/agent-pintu
 
-PR call-graph tracer for TypeScript/Express servers. Given a branch with changes, walks the AST from each touched route handler and emits two artifacts you can paste into a PR or hand to another AI:
+PR call-graph tracer for **TypeScript and JavaScript** Express/Fastify/Koa-style servers. Given a branch with changes, walks the AST from each touched route handler and emits two artifacts you can paste into a PR or hand to another AI:
 
 - **`PR-<n>-<slug>.md`** — human view: title, combined Mermaid flowchart, per-route Mermaid + table, "touched code not reached" section. Renders as a picture in GitHub / Gitea.
 - **`PR-<n>-<slug>.yaml`** — machine view: structured `entry_routes`, `nodes`, `edges`, timestamps. An AI/tool can read this and skip re-walking the codebase.
@@ -113,12 +113,13 @@ edges:
         args: ["payload"]
 ```
 
-## Scope (v0.1)
+## Scope (v0.2)
 
-- **Server-side TypeScript.** Doesn't trace client-side React/RN code or admin dashboards yet.
-- **Route handlers are the only entry points.** Functions touched but not reachable from any traced route appear in a "Touched code not reached" section — usually cron jobs, CLI scripts, or admin-only paths invoked from outside the server root.
+- **TypeScript and JavaScript.** Walks `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`. When `tsConfig` is set (or `tsconfig.json` exists at the server or project root), pintu loads the project from it. **For JS-only projects without a tsconfig**, pintu synthesizes a ts-morph project with `allowJs: true` — just leave `tsConfig` unset in your `.pintu.json` (or omit the file).
+- **Route handlers — named or inline.** Both `router.get(path, namedHandler)` and `router.get(path, async (req, res) => {...})` are detected. Inline handlers get a synthetic label like `<inline get@L22>`.
+- **Doesn't trace client-side code or admin dashboards yet.**
 - **Arg labels are source text, not type-resolved.** Edge labels show the literal source of the first 1–2 arguments (capped at 60 chars).
-- **Mount-prefix detection** uses suffix-matching on import paths in `appEntry`. Indirect mounts via sub-modules may fall back to router-local paths.
+- **Mount-prefix detection** uses suffix-matching on import paths in `appEntry` and only resolves plain string / no-substitution template prefixes. Template literals with variable substitutions (e.g. `app.use(\`${BASE_PATH}/api\`, router)`) currently fall back to router-local paths — roadmap item.
 
 ## Composition with [agent-binod](https://www.npmjs.com/package/@smi0001/agent-binod)
 
@@ -126,11 +127,13 @@ The pair works well together: run `agent-pintu` first to generate the `.yaml`, t
 
 ## Known limitations / roadmap
 
+- **Mount prefixes from template literals with variables** — e.g. `app.use(\`${BASE_PATH}/api\`, router)` currently falls back to router-local paths.
 - **Cross-stack stitching** — pick up `axios.get('/_/...')` / `fetch('/_/...')` calls in client code and join them into matching route entries.
-- **Test coverage overlay** — flag which nodes have a corresponding `*.test.ts` reference.
+- **Test coverage overlay** — flag which nodes have a corresponding `*.test.{ts,js}` reference.
 - **`<out-dir>/index.yaml`** — one-line entry per generated trace so future agents can grep instead of scanning the directory.
 - **Type-resolved arg labels.**
 - **Pre-push hook / Gitea webhook** — auto-generate on PR open, commit the pair back to the branch.
+- **Python / Go / other languages** — different ASTs entirely; would ship as sibling packages with a shared core, only when there's a concrete project to point each one at.
 
 ## License
 

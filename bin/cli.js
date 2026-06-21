@@ -28,6 +28,8 @@ Trace options:
   --routes-pattern <substr>     Substring identifying route files (routes mode only, default: "/routes/")
   --out-dir <dir>               Output directory (default: "documents/pr-traces")
   --depth <n>                   Max call-graph walk depth (default: 4)
+  --skip-base-check             Skip the "is your local base up-to-date with remote?" check
+                                (auto-skipped when base is a local branch or SHA)
 
 Examples:
   agent-pintu init

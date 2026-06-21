@@ -144,6 +144,23 @@ For CI, pin the mode in `.pintu.json` or pass `--mode` so the run is determinist
 
 The pair works well together: run `agent-pintu` first to generate the `.yaml`, then point `agent-binod` at the PR — binod's review gets free structural context ("you touched 6 routes; here's the call graph") at near-zero token cost vs re-parsing the source.
 
+## Base-branch freshness check
+
+When `baseBranch` is a remote-tracking ref (e.g. `upstream/release`), pintu does a one-off `git ls-remote` to compare your local ref with the remote tip before running. If they differ, you get a warning:
+
+```
+[pintu] ⚠  Your local "upstream/release" is OUT OF SYNC with upstream.
+[pintu]    local:  1d559d441475
+[pintu]    remote: d6fc897d2df4
+[pintu]    Run `git fetch upstream release` to refresh, then re-run.
+[pintu]    (Pass --skip-base-check to suppress this warning.)
+```
+
+It's non-blocking — pintu proceeds with the local copy. Skipped automatically when:
+- `baseBranch` is a local branch or SHA (no remote-tracking concept)
+- You pass `--skip-base-check` (useful for offline / air-gapped / CI runs with pre-fetched refs)
+- The remote is unreachable (a soft notice is printed, run continues)
+
 ## Known limitations / roadmap
 
 - **Mount prefixes from template literals with variables** — e.g. `app.use(\`${BASE_PATH}/api\`, router)` currently falls back to router-local paths.

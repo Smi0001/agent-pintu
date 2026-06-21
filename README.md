@@ -113,13 +113,32 @@ edges:
         args: ["payload"]
 ```
 
-## Scope (v0.2)
+## Trace modes (v0.3)
+
+Pintu now has **two ways to pick entry points**, selected via `--mode` or the interactive prompt:
+
+| Mode | Entry points | Best for |
+|---|---|---|
+| **`routes`** (default for backend servers) | Express route handlers detected in changed route files (`router.METHOD(path, handler)` or `router.route(path).METHOD(handler)`) | Backend Node services with HTTP routes — answers "what URLs does this PR affect?" |
+| **`touched`** | Every top-level function (and class method) whose body intersects a diff hunk | Any project — frontend SPAs, libraries, CLIs, monorepos without classic Express routes. Answers "what functions changed and what do they call?" |
+
+If you don't pass `--mode` and don't set `mode` in `.pintu.json`, pintu prompts you interactively (or defaults to `routes` in non-TTY contexts like CI).
+
+```bash
+agent-pintu trace --pr-num 42 --title "..."             # interactive prompt
+agent-pintu trace --mode touched --pr-num 42 --title "..."  # explicit, no prompt
+```
+
+For CI, pin the mode in `.pintu.json` or pass `--mode` so the run is deterministic.
+
+## Scope (v0.3)
 
 - **TypeScript and JavaScript.** Walks `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`. When `tsConfig` is set (or `tsconfig.json` exists at the server or project root), pintu loads the project from it. **For JS-only projects without a tsconfig**, pintu synthesizes a ts-morph project with `allowJs: true` — just leave `tsConfig` unset in your `.pintu.json` (or omit the file).
-- **Route handlers — named or inline.** Both `router.get(path, namedHandler)` and `router.get(path, async (req, res) => {...})` are detected. Inline handlers get a synthetic label like `<inline get@L22>`.
-- **Doesn't trace client-side code or admin dashboards yet.**
+- **Route handlers — named or inline (routes mode).** Both `router.get(path, namedHandler)` and `router.get(path, async (req, res) => {...})` are detected. Inline handlers get a synthetic label like `<inline get@L22>`.
+- **Top-level functions and class methods (touched mode).** Nested arrow functions inside other functions are skipped to avoid graph explosion.
+- **Doesn't trace client-side framework routers** (Durandal, Knockout, React Router, Vue Router, etc.) in routes mode. For frontend projects, use `--mode touched`.
 - **Arg labels are source text, not type-resolved.** Edge labels show the literal source of the first 1–2 arguments (capped at 60 chars).
-- **Mount-prefix detection** uses suffix-matching on import paths in `appEntry` and only resolves plain string / no-substitution template prefixes. Template literals with variable substitutions (e.g. `app.use(\`${BASE_PATH}/api\`, router)`) currently fall back to router-local paths — roadmap item.
+- **Mount-prefix detection** (routes mode) uses suffix-matching on import paths in `appEntry` and only resolves plain string / no-substitution template prefixes. Template literals with variable substitutions (e.g. `app.use(\`${BASE_PATH}/api\`, router)`) currently fall back to router-local paths — roadmap item.
 
 ## Composition with [agent-binod](https://www.npmjs.com/package/@smi0001/agent-binod)
 

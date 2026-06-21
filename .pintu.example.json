@@ -6,5 +6,6 @@
   "baseBranch": "main",
   "outDir": "documents/pr-traces",
   "routesPattern": "/routes/",
-  "depth": 4
+  "depth": 4,
+  "mode": "routes"
 }

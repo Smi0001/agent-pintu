@@ -7,5 +7,29 @@
   "outDir": "documents/pr-traces",
   "routesPattern": "/routes/",
   "depth": 4,
-  "mode": "routes"
+  "mode": "routes",
+
+  "_multiRootExample": "For projects that span multiple source trees, replace the top-level serverRoot/tsConfig/appEntry/mode/routesPattern with a `roots` array. Each root can override mode/tsConfig/etc independently. Example below — delete the underscore-prefixed fields above if switching to this:",
+  "_roots": [
+    {
+      "label": "server",
+      "serverRoot": "server",
+      "tsConfig": "server/tsconfig.json",
+      "appEntry": "server/app.ts",
+      "mode": "routes",
+      "routesPattern": "/routes/"
+    },
+    {
+      "label": "client",
+      "serverRoot": "client/src",
+      "tsConfig": "client/tsconfig.json",
+      "mode": "touched"
+    },
+    {
+      "label": "admin",
+      "serverRoot": "adminDashboard/src",
+      "tsConfig": "adminDashboard/tsconfig.json",
+      "mode": "touched"
+    }
+  ]
 }

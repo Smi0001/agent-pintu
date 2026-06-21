@@ -15,14 +15,15 @@ Commands:
   -h, --help                    Show this help
 
 Trace options:
-  --mode <routes|touched>       Entry-point strategy (default: prompt if TTY, else "routes")
+  --mode <routes|touched>       Default entry-point strategy (default: prompt if TTY, else "routes")
+                                Each root in .pintu.json can override per-root.
                                   routes:  walk from changed Express route handlers
                                   touched: walk from every function touched by the diff
   --project <dir>               Project root (default: cwd or nearest .pintu.json dir)
   --base <branch>               Base branch (default: main / master / develop autodetect)
   --pr-num <n>                  PR number for filename (default: "wip")
   --title <text>                Title shown at top of the .md (default: "Trace vs <base>")
-  --server-root <dir>           Code root, relative to project (default: "server")
+  --server-root <dir>           Single-root override (collapses to one root, ignores .pintu.json's roots[])
   --ts-config <path>            tsconfig.json path (default: <server-root>/tsconfig.json, optional)
   --app-entry <path>            File where mount-prefix detection looks (routes mode only)
   --routes-pattern <substr>     Substring identifying route files (routes mode only, default: "/routes/")
@@ -30,6 +31,11 @@ Trace options:
   --depth <n>                   Max call-graph walk depth (default: 4)
   --skip-base-check             Skip the "is your local base up-to-date with remote?" check
                                 (auto-skipped when base is a local branch or SHA)
+
+Multi-root (.pintu.json):
+  Set "roots": [{label, serverRoot, tsConfig?, appEntry?, mode?, routesPattern?}, ...]
+  to trace a PR that spans multiple source trees (e.g. server + client + admin).
+  Single-root configs (top-level serverRoot/tsConfig/...) continue to work.
 
 Examples:
   agent-pintu init

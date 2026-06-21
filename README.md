@@ -1,6 +1,6 @@
 # @smi0001/agent-pintu
 
-PR call-graph tracer for **TypeScript and JavaScript** Express/Fastify/Koa-style servers. Given a branch with changes, walks the AST from each touched route handler and emits two artifacts you can paste into a PR or hand to another AI:
+PR call-graph tracer for **TypeScript and JavaScript** projects. Walks the AST from each route handler (or every touched function) in a PR diff and emits two artifacts you can paste into a PR or hand to another AI:
 
 - **`PR-<n>-<slug>.md`** — human view: title, combined Mermaid flowchart, per-route Mermaid + table, "touched code not reached" section. Renders as a picture in GitHub / Gitea.
 - **`PR-<n>-<slug>.yaml`** — machine view: structured `entry_routes`, `nodes`, `edges`, timestamps. An AI/tool can read this and skip re-walking the codebase.
@@ -143,6 +143,57 @@ For CI, pin the mode in `.pintu.json` or pass `--mode` so the run is determinist
 ## Composition with [agent-binod](https://www.npmjs.com/package/@smi0001/agent-binod)
 
 The pair works well together: run `agent-pintu` first to generate the `.yaml`, then point `agent-binod` at the PR — binod's review gets free structural context ("you touched 6 routes; here's the call graph") at near-zero token cost vs re-parsing the source.
+
+## Multi-root projects (v0.4)
+
+When a PR spans multiple source trees — server + client + admin dashboard, or multiple bundles in a monorepo — declare each root in `.pintu.json`:
+
+```json
+{
+  "project": ".",
+  "roots": [
+    {
+      "label": "server",
+      "serverRoot": "server",
+      "tsConfig": "server/tsconfig.json",
+      "appEntry": "server/app.ts",
+      "mode": "routes"
+    },
+    {
+      "label": "client",
+      "serverRoot": "client/src",
+      "tsConfig": "client/tsconfig.json",
+      "mode": "touched"
+    },
+    {
+      "label": "admin",
+      "serverRoot": "adminDashboard/src",
+      "tsConfig": "adminDashboard/tsconfig.json",
+      "mode": "touched"
+    }
+  ],
+  "baseBranch": "upstream/main",
+  "outDir": "documents/pr-traces",
+  "depth": 4
+}
+```
+
+Each root is processed independently — its own tsconfig, mode, and entry-point detector — and the resulting call graphs are merged into a single Mermaid diagram and YAML file. Each node in the YAML carries a `roots` array tagging which root(s) walked into it, so a shared utility called by both `client` and `admin` shows `roots: ["client", "admin"]`.
+
+**Per-root fields:**
+
+| Field | Required | Notes |
+|---|---|---|
+| `label` | optional | Display name (defaults to basename of `serverRoot`) |
+| `serverRoot` | yes | Directory to walk, relative to config file's location |
+| `tsConfig` | optional | If omitted, pintu auto-finds `<serverRoot>/tsconfig.json` then synthesizes |
+| `appEntry` | optional | For `routes` mode mount-prefix detection |
+| `mode` | optional | `routes` or `touched`. Falls back to top-level `mode`, then interactive prompt |
+| `routesPattern` | optional | Defaults to `/routes/` |
+
+**Single-root configs continue to work unchanged** — the top-level `serverRoot`/`tsConfig`/`appEntry`/`mode`/`routesPattern` fields are still supported, and the output shape for single-root is identical to v0.3.
+
+**Cross-root edges aren't drawn.** If a function in `client/src` imports from `adminDashboard/src`, each root only resolves symbols within its own tsconfig. The call to the cross-root function will appear as a terminal external node in the calling root. Single-tsconfig projects don't have this problem — both halves are loaded into the same ts-morph project there.
 
 ## Base-branch freshness check
 
